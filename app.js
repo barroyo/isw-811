@@ -3,11 +3,13 @@ const mongoose = require('mongoose');
 const db = mongoose.connect('mongodb://127.0.0.1:27017/todo-api');
 const Task = require('./models/taskModel');
 const app = express();
+const cors = require('cors');
 
 const bodyParser = require('body-parser');
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+app.use(cors())
 
 
 app.set('view engine', 'pug');
@@ -48,7 +50,7 @@ app.get('/api/tasks', (req, res) => {
 
 app.post('/api/tasks', (req, res) => {
     var task = new Task();
-    
+
     task.title = req.body.title;
     task.detail = req.body.detail;
 
