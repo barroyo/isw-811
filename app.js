@@ -3,13 +3,13 @@ const mongoose = require('mongoose');
 const db = mongoose.connect('mongodb://127.0.0.1:27017/todo-api');
 const Task = require('./models/taskModel');
 const app = express();
-const cors = require('cors');
+// const cors = require('cors');
 
 const bodyParser = require('body-parser');
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(cors())
+// app.use(cors());
 
 
 app.set('view engine', 'pug');
