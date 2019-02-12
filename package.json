@@ -12,7 +12,9 @@
   "dependencies": {
     "cors": "^2.8.4",
     "express": "4.16.3",
-    "mongoose": "^5.1.5",
+    "express-basic-auth": "^1.1.6",
+    "mongoose": "^5.4.10",
+    "nodejs-base64": "^1.0.3",
     "pug": "^2.0.3"
   },
   "devDependencies": {
