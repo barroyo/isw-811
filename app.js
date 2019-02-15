@@ -32,13 +32,11 @@ app.use(function (req, res, next) {
       next();
       return;
     }
-
-    res.status(401);
-    res.send({
-      error: "Unauthorized "
-    });
-    return;
   }
+  res.status(401);
+  res.send({
+    error: "Unauthorized "
+  });
 });
 
 // using basic auth
