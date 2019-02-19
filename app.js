@@ -1,13 +1,17 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const jwt = require("jsonwebtoken");
 const db = mongoose.connect("mongodb://127.0.0.1:27017/todo-api");
 const app = express();
+
 const Task = require("../todo-api-express/models/taskModel");
 const basicAuth = require('express-basic-auth')
 const {
   base64decode
 } = require('nodejs-base64');
 
+// TODO: this should be an ENV var
+const theSecretKey = '123';
 const {
   postMethod,
   getMethod
@@ -19,25 +23,80 @@ const bodyParser = require("body-parser");
 // check for cors
 app.use(cors());
 
-// custom basic authentication
+// parses the body
+app.use(
+  bodyParser.urlencoded({
+    extended: true
+  })
+);
+app.use(bodyParser.json());
+
+// do not validate on authentication api
+app.post("/api/session", function (req, res, next) {
+  if (req.body.username && req.body.password &&
+    req.body.username === 'admin' && req.body.password === 'password') {
+    let token = jwt.sign({
+      userId: 123,
+      name: 'admin'
+    }, theSecretKey);
+
+    res.status(200).json({
+      token
+    })
+  } else {
+    next();
+  }
+});
+
+// JWT Authentication
 app.use(function (req, res, next) {
   if (req.headers["authorization"]) {
-    const authBase64 = req.headers['authorization'].split(' ');
-    const userPass = base64decode(authBase64[1]);
-    const user = userPass.split(':')[0];
-    const password = userPass.split(':')[1];
+    const authToken = req.headers['authorization'].split(' ')[1];
+    try {
+      jwt.verify(authToken, theSecretKey, (err, decodedToken) => {
+        if (err || !decodedToken) {
+          res.status(401);
+          res.json({
+            error: "Unauthorized "
+          });
+        }
+        console.log('decodedToken', decodedToken);
 
-    //
-    if (user === 'admin' && password == '1234') {
+        if (decodedToken.userId == 123) {
+          next();
+        }
+      });
+    } catch (e) {
       next();
-      return;
     }
+
+  } else {
+    res.status(401);
+    res.send({
+      error: "Unauthorized "
+    });
   }
-  res.status(401);
-  res.send({
-    error: "Unauthorized "
-  });
 });
+
+// custom basic authentication
+// app.use(function (req, res, next) {
+//   if (req.headers["authorization"]) {
+//     const authBase64 = req.headers['authorization'].split(' ');
+//     const userPass = base64decode(authBase64[1]);
+//     const user = userPass.split(':')[0];
+//     const password = userPass.split(':')[1];
+
+//     //
+//     if (user === 'admin' && password == '1234') {
+//       next();
+//       return;
+//     }
+//   }
+//   res.status(401);
+//   res.send({
+//     error: "Unauthorized "
+//   });
+// });
 
 // using basic auth
 // app.use(basicAuth({
@@ -47,38 +106,6 @@ app.use(function (req, res, next) {
 //     'user2': 'supersecret2',
 //   }
 // }));
-
-app.use(
-  bodyParser.urlencoded({
-    extended: true
-  })
-);
-app.use(bodyParser.json());
-
-// // app.set('view engine', 'pug');
-// // // this is where we can put the public contents like css and js files
-// // app.use(express.static(__dirname + '/public'));
-
-// // app.get('/', (request, response) => {
-// //     //connect to db and get data
-// //     response.render('index', {
-// //         title: 'Main Title',
-// //         content: 'The content of the page'
-// //     })
-// // });
-
-// app.get('/tasks', (request, response) => {
-//     //connect to db and get data
-//     Task.find(function(err, tasks){
-//         if(err) {
-//             response.send(err);
-//         }
-//         response.render('index', {
-//             title: 'Tasks',
-//             content: JSON.stringify(tasks)
-//         })
-//     });
-// });
 
 // handle the routes
 app.get("/api/tasks", getMethod);
